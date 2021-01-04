@@ -1,0 +1,55 @@
+---
+- name: "Create a VM from  template"
+  connection: local
+  gather_facts: false
+  hosts: localhost
+  tasks:
+
+    - name: "Clone the template"
+      vmware_guest:
+        username: '{{ lookup("env", "VMWARE_USER") }}'
+        password: '{{ lookup("env", "VMWARE_PASSWORD") }}'
+        hostname: '{{ lookup("env", "VMWARE_HOST") }}'
+        template: "Server-{{ os_version }}-Template"
+        validate_certs: false
+        cluster: "{{ cluster }}"
+        datacenter: "{{ datacenter }}"
+        folder: "{{ vmfolder }}"
+        state: poweredon
+        datastore: "{{ datastore }}"
+        annotation: "{{ description }} - Server Setup: {{ '%m-%d-%Y' | strftime }}"
+        name: "{{ server_name|upper }}"
+        networks:
+          - name: "{{ vmnetname }}"
+            device_type: vmxnet3
+            ip: "{{ serverip }}"
+            netmask: "{{ netmask }}"
+            gateway: "{{ gateway }}"
+            dns_servers:
+            - "{{ dns1 }}"
+            - "{{ dns2 }}"
+        hardware:
+            memory_mb: "{{ ram *1024 }}"
+            num_cpus: "{{ cpu_cores }}"
+            num_cpu_cores_per_socket: "{{ cpu_cores }}"
+            hotadd_cpu: True
+            hotremove_cpu: True
+            hotadd_memory: True
+        customization:
+          domain: "{{ domain }}"
+          domainadmin: "{{ domain_username }}"
+          domainadminpassword: "{{ domain_password }}"
+          fullname: " {{ company }}"
+          orgname: "{{ company }}"
+          joindomain: "{{ domain }}"
+          timezone: "{{ tz }}"
+          autologon: True
+          password: '{{ localwin_password }}'
+          runonce:
+          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Windows\Temp\ConfigureRemotingForAnsible.ps1
+        wait_for_customization: 'Yes'
+        wait_for_ip_address: 'No'
+
+    - name: Wait for 20 Seconds for things to boot up
+      wait_for:
+        timeout: 20
