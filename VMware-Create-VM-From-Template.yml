@@ -45,8 +45,6 @@
           timezone: "{{ tz }}"
           autologon: True
           password: '{{ localwin_password }}'
-          runonce:
-          - powershell.exe -ExecutionPolicy Unrestricted -File C:\Windows\Temp\ConfigureRemotingForAnsible.ps1
         wait_for_customization: 'Yes'
         wait_for_ip_address: 'No'
 
